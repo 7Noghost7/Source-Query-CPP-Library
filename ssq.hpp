@@ -1,3 +1,16 @@
+/*
+   _____    ____________________________ 
+  /  _  \  /   _____/\_   ___ \______   \
+ /  /_\  \ \_____  \ /    \  \/|     ___/
+/    |    \/        \\     \___|    |    
+\____|__  /_______  / \______  /____|    
+        \/        \/         \/          
+
+        Created by:ASCP11
+        Source Server Query (SSQ)
+        @2020
+*/
+
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netdb.h>
