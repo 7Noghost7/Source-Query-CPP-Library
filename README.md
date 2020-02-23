@@ -30,4 +30,13 @@ int main(int argc, char *argv[])
   return 0;
 }
 ```
+## Compiling
+```
+g++ example.cpp -o example
+```
+## Example usage
+```
+./example 127.0.0.1 27015
+```
+
 [This page describes the packet format and protocol](https://developer.valvesoftware.com/wiki/Server_queries)
