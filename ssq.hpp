@@ -18,7 +18,7 @@
 #include <errno.h>
 
 
-char A2S_INFO[] = {
+const unsigned char A2S_INFO[] = {
 	0xFF, 0xFF, 0xFF, 0xFF, 0x54, 0x53, 0x6F, 0x75, 0x72, 0x63,
 	0x65, 0x20, 0x45, 0x6E, 0x67, 0x69, 0x6E, 0x65, 0x20, 0x51,
 	0x75, 0x65, 0x72, 0x79, 0x00
@@ -36,6 +36,16 @@ class Server_info{
 		        return 1;
 		        exit(1);
 		    }
+			//timeout for linux
+			struct timeval tv;
+			tv.tv_sec = 2;
+			tv.tv_usec = 0;
+			setsockopt(udp_sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+			
+			//windows timeout
+			// DWORD timeout = timeout_in_seconds * 1000; 
+			// setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof timeout);
+
 		    struct addrinfo hints;
 		    struct addrinfo *result;
 		    memset(&hints, 0, sizeof(struct addrinfo));
@@ -44,18 +54,19 @@ class Server_info{
 		    hints.ai_flags = 0;
 		    hints.ai_protocol = 0;
 		    int src_addr = getaddrinfo(ip_addr, port, &hints, &result);
+			server_is_alive = 1;
 		    if (src_addr != 0)
 		    {
 		        std::cout<<"[ERROR]Failed to resolve remote socket address:"<<gai_strerror(src_addr)<<"\n";
 		        return 1;
 		        exit(1);
 		    }
-
-		    int resp = sendto(udp_sock, A2S_INFO, strlen(A2S_INFO) + 1, 0,
+		    int resp = sendto(udp_sock, A2S_INFO, strlen((char*)A2S_INFO) + 1, 0,
 		                      result->ai_addr, result->ai_addrlen);
 		    if (resp == -1)
 		    {
 		        std::cout<<"[ERROR]Sending packet failed:"<<strerror(errno)<<"\n";
+				server_is_alive = 0;
 		    }
 		    char buffer[1472];
 		    ssize_t recv = recvfrom(udp_sock, buffer, sizeof(buffer), 0,
@@ -63,6 +74,7 @@ class Server_info{
 		    if (recv < 1)
 		    {
 		        std::cout<<"[ERROR]Response was empty or error occurred.\n";
+				server_is_alive = 0;
 		    }
 		    //Global discard						//
 		    int discard;
@@ -159,8 +171,12 @@ class Server_info{
 			return 0;
 		}
 
+		int ServerOnline(){
+			return server_is_alive;
+		}
+
 		std::string GetHostname(){
-			if (Initialized==1){
+			if (Initialized==1 && server_is_alive==1){
 				return hostname;
 			}else{
 				return "[ERROR]Not Initialized!";
@@ -168,7 +184,7 @@ class Server_info{
 		}
 
 		std::string GetMap(){
-			if (Initialized==1){
+			if (Initialized==1 && server_is_alive==1){
 				return map;
 			}else{
 				return "[ERROR]Not Initialized!";
@@ -176,7 +192,7 @@ class Server_info{
 		}
 
 		std::string GetGameFolder(){
-			if (Initialized==1){
+			if (Initialized==1 && server_is_alive==1){
 				return game_directory;
 			}else{
 				return "[ERROR]Not Initialized!";
@@ -184,21 +200,21 @@ class Server_info{
 		}
 
 		std::string GetGame(){
-			if (Initialized==1){
+			if (Initialized==1 && server_is_alive==1){
 				return game_description;
 			}else{
 				return "[ERROR]Not Initialized!";
 			}
 		}
 		int GetAppId(){
-			if (Initialized==1){
+			if (Initialized==1 && server_is_alive==1){
 				return app_id;
 			}else{
 				return -1;
 			}
 		}
 		int GetCurPlayers(){
-			if (Initialized==1){
+			if (Initialized==1 && server_is_alive==1){
 				return num_players;
 			}else{
 				return -1;
@@ -206,21 +222,21 @@ class Server_info{
 		}
 
 		int GetMaxPlayers(){
-			if (Initialized==1){
+			if (Initialized==1 && server_is_alive==1){
 				return max_players;
 			}else{
 				return -1;
 			}
 		}
 		int GetCurBots(){
-			if (Initialized==1){
+			if (Initialized==1 && server_is_alive==1){
 				return num_of_bots;
 			}else{
 				return -1;
 			}		
 		}
 		std::string GetServerType(){
-			if (Initialized==1){
+			if (Initialized==1 && server_is_alive==1){
 				switch(dedicated){
 					case 100:
 						return "Dedicated";
@@ -238,7 +254,7 @@ class Server_info{
 		}
 
 		std::string GetOS(){
-			if (Initialized==1){
+			if (Initialized==1 && server_is_alive==1){
 				switch(os){
 					case 108:
 						return "Linux";
@@ -256,7 +272,7 @@ class Server_info{
 		}
 
 		std::string GetVisibility(){
-			if (Initialized==1){
+			if (Initialized==1 && server_is_alive==1){
 				switch(password){
 					case 0:
 						return "Public";
@@ -270,7 +286,7 @@ class Server_info{
 			}
 		}
 		std::string GetSecure(){
-			if (Initialized==1){
+			if (Initialized==1 && server_is_alive==1){
 				switch(secure){
 					case 0:
 						return "Unsecure";
@@ -285,7 +301,7 @@ class Server_info{
 		}
 	private:
 		int Initialized;
-
+		int server_is_alive;
 		std::string hostname;
 		std::string map;
 		std::string game_directory;
